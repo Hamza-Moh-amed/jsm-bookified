@@ -91,7 +91,9 @@ export interface ShadowBoxProps {
     className?: string;
 }
 
-export interface VoiceSelectorProps {
+export interface VoiceSelectorProps<T extends FieldValues> {
+    name: FieldPath<T>;
+    invalid: any;
     disabled?: boolean;
     className?: string;
     value?: string;
