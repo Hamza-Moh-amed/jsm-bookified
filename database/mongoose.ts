@@ -1,4 +1,8 @@
-import mongoose from "mongoose"
+import dns from "node:dns/promises";
+
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
+
+import mongoose from "mongoose";
 
 const MONGODB_URI= process.env.MONGODB_URI 
 
@@ -13,7 +17,7 @@ declare global {
 
 let cached = global.mongooseCache || (global.mongooseCache = {conn: null, promise: null})
 
-export const connectToDatebase = async () => {
+export const connectToDatabase = async () => {
     if (cached.conn) return cached.conn
 
     if (!cached.promise) {

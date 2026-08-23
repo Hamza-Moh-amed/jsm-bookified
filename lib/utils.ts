@@ -90,15 +90,17 @@ export const formatDuration = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+
 export async function parsePDFFile(file: File) {
   try {
-    const pdfjsLib = await import('pdfjs-dist');
+    
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     if (typeof window !== 'undefined') {
       pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          'pdfjs-dist/build/pdf.worker.min.mjs',
-          import.meta.url,
-      ).toString();
+  'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+  import.meta.url,
+  ).toString();
     }
 
     // Read file as array buffer
@@ -122,6 +124,7 @@ export async function parsePDFFile(file: File) {
     }
 
     await firstPage.render({
+      canvas,
       canvasContext: context,
       viewport: viewport,
     }).promise;
