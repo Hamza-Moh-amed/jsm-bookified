@@ -9,7 +9,6 @@ const Page = async () =>  {
   const bookResults = await getAllBooks()
   const books = bookResults.success ? bookResults.data ?? [] : []
 
-  console.log(books)
 
   return (
     <main className="wrapper container">

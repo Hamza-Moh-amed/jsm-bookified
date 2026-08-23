@@ -138,3 +138,32 @@ export const getAllBooks  = async (search?: string) => {
    }
 
 }
+
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase()
+
+
+        const book = await Book.findOne({slug}).lean()
+
+        if (!book) {
+            return {
+                success: false,
+                error: "Book not found"
+            }
+        }
+
+        return {
+            success: true,
+            data: serializeData(book)
+        }
+        
+
+    } catch (e) {
+        console.error("Error Fetching book by slug")
+        return {
+            success: false,
+            error: e
+        }
+    }
+}
