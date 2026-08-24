@@ -1,7 +1,7 @@
 'use server';
 
 import {CreateBook, TextSegment} from "@/types";
-import { generateSlug, serializeData} from "@/lib/utils";
+import { escapeRegex, generateSlug, serializeData} from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
 import { connectToDatabase } from "@/database/mongoose";
@@ -99,6 +99,71 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
         return {
             success: false,
             error: e,
+        }
+    }
+}
+
+
+export const getAllBooks  = async (search?: string) => {
+
+   try {
+    await connectToDatabase()
+
+    let query = {}
+
+    if(search) {
+        const escapedSearch = escapeRegex(search)
+        const regex = new RegExp(escapedSearch, "i")
+        query = {
+            $or: [
+                {title: {$regex: regex} },
+                {author: {$regex: regex} }
+            ]
+        }
+    }
+
+    const books = await Book.find(query).sort({createdAt: -1}).lean()
+
+    return {
+        success: true,
+        data: serializeData(books)
+    }
+
+   } catch (e) {
+    console.error("Error getting Books", e)
+    return {
+        success: false,
+        error: e
+    }
+   }
+
+}
+
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase()
+
+
+        const book = await Book.findOne({slug}).lean()
+
+        if (!book) {
+            return {
+                success: false,
+                error: "Book not found"
+            }
+        }
+
+        return {
+            success: true,
+            data: serializeData(book)
+        }
+        
+
+    } catch (e) {
+        console.error("Error Fetching book by slug")
+        return {
+            success: false,
+            error: e
         }
     }
 }
