@@ -91,9 +91,7 @@ export interface ShadowBoxProps {
     className?: string;
 }
 
-export interface VoiceSelectorProps<T extends FieldValues> {
-    name: FieldPath<T>;
-    invalid: any;
+export interface VoiceSelectorProps {
     disabled?: boolean;
     className?: string;
     value?: string;
@@ -117,4 +115,27 @@ export interface FileUploadFieldProps<T extends FieldValues> {
     icon: LucideIcon;
     placeholder: string;
     hint: string;
+}
+import {PLANS, PlanType} from "@/lib/subscription-constants";
+
+export interface SessionCheckResult {
+    allowed: boolean;
+    currentCount: number;
+    limit: number;
+    plan: PlanType;
+    maxDurationMinutes: number;
+    error?: string;
+}
+
+export interface StartSessionResult {
+    success: boolean;
+    sessionId?: string;
+    maxDurationMinutes?: number;
+    error?: string;
+    isBillingError?: boolean;
+}
+
+export interface EndSessionResult {
+    success: boolean;
+    error?: string;
 }
