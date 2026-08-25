@@ -8,7 +8,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         const body = (await request.json()) as HandleUploadBody;
 
         const jsonResponse = await handleUpload({
-            token: process.env.bookified_READ_WRITE_TOKEN,
+            token: process.env.BLOB_READ_WRITE_TOKEN,
             body,
             request,
             onBeforeGenerateToken: async () => {
@@ -31,7 +31,6 @@ export async function POST(request: Request): Promise<NextResponse> {
                 const payload = tokenPayload ? JSON.parse(tokenPayload): null
                 const userId = payload?.userId;
 
-             
             }
         });
 
