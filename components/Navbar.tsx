@@ -1,15 +1,11 @@
 "use client"
+import { navItems } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { ClerkLoaded, ClerkLoading, Show, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-
-const navItems = [
-    {lable: "Library", href: "/"},
-    {lable: "Add new", href: "/books/new"}
-]
 
 const Navbar = () => {
   const pathName= usePathname()

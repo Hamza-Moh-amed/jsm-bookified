@@ -1,11 +1,45 @@
 'use server';
 
 import {CreateBook, TextSegment} from "@/types";
-import { escapeRegex, generateSlug, serializeData} from "@/lib/utils";
+import {connectToDatabase} from "@/database/mongoose";
+import {escapeRegex, generateSlug, serializeData} from "@/lib/utils";
 import Book from "@/database/models/book.model";
 import BookSegment from "@/database/models/book-segment.model";
-import { connectToDatabase } from "@/database/mongoose";
 import mongoose from "mongoose";
+import {getUserPlan} from "@/lib/subscription.server";
+import { PLAN_LIMITS } from "@/lib/subscription-constants";
+import { auth } from "@clerk/nextjs/server";
+
+export const getAllBooks = async (search?: string) => {
+    try {
+        await connectToDatabase();
+
+        let query = {};
+
+        if (search) {
+            const escapedSearch = escapeRegex(search);
+            const regex = new RegExp(escapedSearch, 'i');
+            query = {
+                $or: [
+                    { title: { $regex: regex } },
+                    { author: { $regex: regex } },
+                ]
+            };
+        }
+
+        const books = await Book.find(query).sort({ createdAt: -1 }).lean();
+
+        return {
+            success: true,
+            data: serializeData(books)
+        }
+    } catch (e) {
+        console.error('Error connecting to database', e);
+        return {
+            success: false, error: e
+        }
+    }
+}
 
 export const checkBookExists = async (title: string) => {
     try {
@@ -49,12 +83,28 @@ export const createBook = async (data: CreateBook) => {
             }
         }
 
-
-        const { auth } = await import("@clerk/nextjs/server");
         const { userId } = await auth();
 
         if (!userId || userId !== data.clerkId) {
             return { success: false, error: "Unauthorized" };
+        }
+
+        const plan = await getUserPlan();
+        console.log(plan)
+        const limits = PLAN_LIMITS[plan];
+        console.log(limits)
+
+        const bookCount = await Book.countDocuments({ clerkId: userId });
+
+        if (bookCount >= limits.maxBooks) {
+            const { revalidatePath } = await import("next/cache");
+            revalidatePath("/");
+
+            return {
+                success: false,
+                error: `You have reached the maximum number of books allowed for your ${plan} plan (${limits.maxBooks}). Please upgrade to add more books.`,
+                isBillingError: true,
+            };
         }
 
         const book = await Book.create({...data, clerkId: userId, slug, totalSegments: 0});
@@ -73,6 +123,27 @@ export const createBook = async (data: CreateBook) => {
     }
 }
 
+export const getBookBySlug = async (slug: string) => {
+    try {
+        await connectToDatabase();
+
+        const book = await Book.findOne({ slug }).lean();
+
+        if (!book) {
+            return { success: false, error: 'Book not found' };
+        }
+
+        return {
+            success: true,
+            data: serializeData(book)
+        }
+    } catch (e) {
+        console.error('Error fetching book by slug', e);
+        return {
+            success: false, error: e
+        }
+    }
+}
 
 export const saveBookSegments = async (bookId: string, clerkId: string, segments: TextSegment[]) => {
     try {
@@ -100,71 +171,6 @@ export const saveBookSegments = async (bookId: string, clerkId: string, segments
         return {
             success: false,
             error: e,
-        }
-    }
-}
-
-
-export const getAllBooks  = async (search?: string) => {
-
-   try {
-    await connectToDatabase()
-
-    let query = {}
-
-    if(search) {
-        const escapedSearch = escapeRegex(search)
-        const regex = new RegExp(escapedSearch, "i")
-        query = {
-            $or: [
-                {title: {$regex: regex} },
-                {author: {$regex: regex} }
-            ]
-        }
-    }
-
-    const books = await Book.find(query).sort({createdAt: -1}).lean()
-
-    return {
-        success: true,
-        data: serializeData(books)
-    }
-
-   } catch (e) {
-    console.error("Error getting Books", e)
-    return {
-        success: false,
-        error: e
-    }
-   }
-
-}
-
-export const getBookBySlug = async (slug: string) => {
-    try {
-        await connectToDatabase()
-
-
-        const book = await Book.findOne({slug}).lean()
-
-        if (!book) {
-            return {
-                success: false,
-                error: "Book not found"
-            }
-        }
-
-        return {
-            success: true,
-            data: serializeData(book)
-        }
-        
-
-    } catch (e) {
-        console.error("Error Fetching book by slug")
-        return {
-            success: false,
-            error: e
         }
     }
 }
