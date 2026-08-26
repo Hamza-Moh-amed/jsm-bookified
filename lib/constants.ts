@@ -2,6 +2,13 @@
 export const BRAND_COLOR = '#212a3b'; // Dark blue-gray
 export const BRAND_COLOR_HOVER = '#3d485e'; // Medium blue-gray
 
+
+export const navItems = [
+    {lable: "Library", href: "/"},
+    {lable: "Add new", href: "/books/new"},
+    {lable: "Pricing", href: "/subscriptions"}
+]
+
 // Sample books for the homepage (using Open Library covers)
 export const sampleBooks = [
     {
